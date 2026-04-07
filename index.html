@@ -1033,20 +1033,34 @@ function saveFb(){
   const dt=document.getElementById('fb-dt').value;
   const newStatus=document.getElementById('fb-status').value;
   const wasNew=!s.feedback&&txt;
+  let changed=false;
   // apply status change if selected
   if(newStatus&&newStatus!==s.status){
     const old=s.status;s.status=newStatus;
-    addAudit(s.id,'status',`Status: "${old}" to "${newStatus}" (via feedback)`);
+    addAudit(s.id,'status',`Status: "${old}" → "${newStatus}" (via feedback)`);
+    changed=true;
   }
-  s.feedback=txt;
+  // save feedback text
   if(txt){
+    s.feedback=txt;
     s.fbDate=dt?new Date(dt).toISOString():(!s.fbDate?new Date().toISOString():s.fbDate);
+    // store image separately, don't pass to audit to avoid localStorage overflow
     if(fbImg)s.feedbackImage=fbImg;
-    addAudit(s.id,'feedback',wasNew?'Feedback added':'Feedback updated',fbImg);
+    addAudit(s.id,'feedback',wasNew?'Feedback added'+(fbImg?' (with image)':''):'Feedback updated'+(fbImg?' (with image)':''));
+    changed=true;
   }
-  save();closeO('o-fb');renderT();renderAudit();
+  if(!changed){toast('Nothing to save','er');return;}
+  try{
+    save();
+  }catch(e){
+    // if localStorage full, try saving without image
+    if(fbImg){s.feedbackImage=null;save();}
+    toast('Saved (image too large for storage)','in');
+  }
+  closeO('o-fb');renderT();renderAudit();
   if(txt){trigSlack(s);trigCU(s);}
-  toast(newStatus?(wasNew?'Feedback saved & status updated':'Status updated'):(wasNew?'Feedback saved':'Feedback updated'),'ok');
+  const msg=newStatus&&txt?'Feedback saved & status updated':newStatus?'Status updated':wasNew?'Feedback saved':'Feedback updated';
+  toast(msg,'ok');
 }
 
 // INTERNAL NOTES
