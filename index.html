@@ -122,9 +122,9 @@ input,select,textarea,button{font-family:inherit;font-size:14px}
 .tabt{padding:7px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--txt2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:var(--r) var(--r) 0 0}
 .tabt:hover{color:var(--txt);background:var(--surf2)}
 .tabt.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
-.twrap{flex:1;overflow:auto;padding:16px 22px}
-.tbox{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);overflow:auto;box-shadow:var(--sha)}
-table{width:100%;border-collapse:collapse;min-width:900px}
+.twrap{flex:1;overflow:auto;padding:16px 22px;position:relative}
+.tbox{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);overflow:visible;box-shadow:var(--sha)}
+table{width:100%;border-collapse:collapse;min-width:900px;position:relative}
 thead tr{background:var(--surf2)}
 th{padding:9px 12px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);border-bottom:1px solid var(--bdr);white-space:nowrap}
 th:first-child{border-radius:var(--rl) 0 0 0}th:last-child{border-radius:0 var(--rl) 0 0}
@@ -151,7 +151,7 @@ tr:hover td{background:var(--surf2)}
 .srv{background:var(--ambd);color:var(--amb)}
 .spe{background:var(--blud);color:var(--blu)}
 .sho{background:var(--purd);color:var(--pur)}
-.swd{position:absolute;top:calc(100% + 5px);left:0;background:var(--surf);border:1px solid var(--bdr2);border-radius:var(--rl);padding:4px;min-width:162px;z-index:999;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.swd{position:fixed;background:var(--surf);border:1px solid var(--bdr2);border-radius:var(--rl);padding:4px;min-width:162px;z-index:9999;box-shadow:0 8px 28px rgba(0,0,0,.25)}
 .swo{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--txt);transition:background .1s}
 .swo:hover{background:var(--surf2)}.swod{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dbg{position:fixed;inset:0;z-index:998}
@@ -881,15 +881,24 @@ function togDrop(id,e){
   const sw=document.getElementById('sw-'+id);if(!sw)return;
   if(sw.querySelector('.swd')){closeDrop();return;}
   dropId=id;
-  sw.querySelector('.swb').classList.add('op');
+  const btn=sw.querySelector('.swb');
+  btn.classList.add('op');
+  const rect=btn.getBoundingClientRect();
   const d=document.createElement('div');d.className='swd';
+  d.style.top=(rect.bottom+5)+'px';
+  d.style.left=rect.left+'px';
   d.innerHTML=SL.map(st=>`<div class="swo" onclick="setSt('${id}','${st.v}')"><span class="swod" style="background:${st.c}"></span>${st.v}</div>`).join('');
-  sw.appendChild(d);
+  document.body.appendChild(d);
   const bg=document.createElement('div');bg.className='dbg';bg.id='_dbg';bg.onclick=closeDrop;document.body.appendChild(bg);
 }
 function closeDrop(){
-  if(dropId){const sw=document.getElementById('sw-'+dropId);if(sw){const d=sw.querySelector('.swd');if(d)d.remove();const b=sw.querySelector('.swb');if(b)b.classList.remove('op');}}
-  const bg=document.getElementById('_dbg');if(bg)bg.remove();dropId=null;
+  if(dropId){
+    const sw=document.getElementById('sw-'+dropId);
+    if(sw){const b=sw.querySelector('.swb');if(b)b.classList.remove('op');}
+  }
+  document.querySelectorAll('.swd').forEach(d=>d.remove());
+  const bg=document.getElementById('_dbg');if(bg)bg.remove();
+  dropId=null;
 }
 function setSt(id,val){
   const s=subs.find(x=>x.id===id);if(!s)return;
@@ -1001,6 +1010,7 @@ function openFb(id){
   document.getElementById('fb-ttl').textContent='Feedback — '+s.name;
   document.getElementById('fb-txt').value=s.feedback||'';
   document.getElementById('fb-dt').value=s.fbDate?s.fbDate.slice(0,10):'';
+  document.getElementById('fb-status').value='';
   document.getElementById('fbprev').style.display='none';
   document.getElementById('fbclr').classList.add('hide');
   document.getElementById('fbhint').textContent=settings.slackWebhook?'Saving will notify Slack and sync to ClickUp.':'';
@@ -1011,7 +1021,13 @@ function saveFb(){
   const s=subs.find(x=>x.id===fbId);if(!s)return;
   const txt=document.getElementById('fb-txt').value.trim();
   const dt=document.getElementById('fb-dt').value;
+  const newStatus=document.getElementById('fb-status').value;
   const wasNew=!s.feedback&&txt;
+  // apply status change if selected
+  if(newStatus&&newStatus!==s.status){
+    const old=s.status;s.status=newStatus;
+    addAudit(s.id,'status',`Status: "${old}" to "${newStatus}" (via feedback)`);
+  }
   s.feedback=txt;
   if(txt){
     s.fbDate=dt?new Date(dt).toISOString():(!s.fbDate?new Date().toISOString():s.fbDate);
@@ -1020,7 +1036,7 @@ function saveFb(){
   }
   save();closeO('o-fb');renderT();renderAudit();
   if(txt){trigSlack(s);trigCU(s);}
-  toast(wasNew?'Feedback saved':'Feedback updated','ok');
+  toast(newStatus?(wasNew?'Feedback saved & status updated':'Status updated'):(wasNew?'Feedback saved':'Feedback updated'),'ok');
 }
 
 // INTERNAL NOTES
