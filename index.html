@@ -1075,31 +1075,33 @@ async function sendNf(){
   const s=subs.find(x=>x.id===nfId);if(!s)return;
   if(!settings.slackWebhook){toast('Add a Slack webhook in Settings first','er');return;}
   const extra=document.getElementById('nf-ext').value.trim();
-  const mgr=settings.clientManagers[s.cid]||'Client Manager';
+  // support both single string and array for client managers
+  const rawMgr=settings.clientManagers[s.cid]||'';
+  const mgrArr=Array.isArray(rawMgr)?rawMgr:(rawMgr?[rawMgr]:[]);
+  const mgrDisplay=mgrArr.length?mgrArr.join(', '):'Client Manager';
+  // resolve each manager to slack tag if in team directory
+  const cmgrTags=mgrArr.map(name=>{
+    const found=settings.team&&settings.team.find(m=>m.name&&m.name.toLowerCase()===name.toLowerCase());
+    return found&&found.slackId?`<@${found.slackId}>`:name;
+  }).join(', ');
   const admTags=settings.team?settings.team.filter(m=>m.role==='Admin'&&m.slackId).map(m=>`<@${m.slackId}>`).join(' '):'';
-  // tag client manager by name match in team directory
-  const cmgrName=settings.clientManagers[s.cid]||'';
-  const cmgrMember=settings.team&&settings.team.find(m=>m.name&&m.name.toLowerCase()===cmgrName.toLowerCase());
-  const cmgrTag=cmgrMember&&cmgrMember.slackId?`<@${cmgrMember.slackId}>`:cmgrName;
   const nfMsgText=resolveTpl('slackNewSub',{
     taskName:s.name,client:s.cname,type:s.type,version:s.version,
-    designer:s.designer||'TBD',marketplace:s.marketplace||'US',
-    asin:s.asin||'',clientManager:cmgrTag,
+    designer:s.designer||'TBD',marketplace:s.marketplace||'—',
+    asin:s.asin||'',clientManager:cmgrTags||mgrDisplay,
     link:s.link?`<${s.link}|View Asset>`:''
   });
-  const blocks=[
-    {type:'section',text:{type:'mrkdwn',text:nfMsgText}},
-  ];
+  const blocks=[{type:'section',text:{type:'mrkdwn',text:nfMsgText}}];
   if(admTags)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Admins:* ${admTags}`}});
-  if(s.link)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Link:* <${s.link}|View Asset>`}});
-  if(extra)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Note:*\n${extra}`}});
-  blocks.push({type:'context',elements:[{type:'mrkdwn',text:`Notifying: ${mgr} - ${new Date().toLocaleString()}`}]});
+  if(extra)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Note:*
+${extra}`}});
+  blocks.push({type:'context',elements:[{type:'mrkdwn',text:`Notifying: ${mgrDisplay} · ${new Date().toLocaleString()}`}]});
   try{
     await fetch('/api/slack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhookUrl:settings.slackWebhook,payload:{blocks}})});
-    document.getElementById('nf-res').innerHTML=`<div style="color:var(--grn);font-size:13px">Notification sent to ${mgr}</div>`;
-    addAudit(s.id,'notify',`Client manager (${mgr}) notified`);save();renderAudit();
-    setTimeout(()=>closeO('o-nf'),1300);toast(`Notified ${mgr}`,'ok');
-  }catch(e){document.getElementById('nf-res').innerHTML=`<div style="color:var(--red);font-size:13px">Failed — check webhook URL</div>`;}
+    document.getElementById('nf-res').innerHTML=`<div style="color:var(--grn);font-size:13px">✓ Notification sent to ${mgrDisplay}</div>`;
+    addAudit(s.id,'notify',`Client manager (${mgrDisplay}) notified`);save();renderAudit();
+    setTimeout(()=>closeO('o-nf'),1300);toast(`Notified ${mgrDisplay}`,'ok');
+  }catch(e){document.getElementById('nf-res').innerHTML=`<div style="color:var(--red);font-size:13px">Failed — check your Slack webhook URL in Settings</div>`;}
 }
 
 // AUDIT
