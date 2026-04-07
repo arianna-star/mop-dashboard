@@ -218,6 +218,23 @@ tr:hover td{background:var(--surf2)}
 .csw:hover,.csw.on{border-color:var(--txt);transform:scale(1.12)}
 .tst{padding:4px 11px;border-radius:var(--r);border:1px solid var(--bdr2);background:none;cursor:pointer;font-size:12px;color:var(--txt2);margin-left:7px}
 .tst:hover{background:var(--surf3)}
+.tpl-tab{padding:5px 11px;border-radius:var(--r);border:1px solid var(--bdr2);background:none;cursor:pointer;font-size:12px;color:var(--txt2);transition:all .15s;font-family:inherit}
+.tpl-tab:hover{background:var(--surf2);color:var(--txt)}
+.tpl-tab.on{background:var(--adim);color:var(--acc);border-color:var(--acc)}
+.tpl-var{padding:3px 8px;border-radius:20px;background:var(--surf3);color:var(--txt2);font-size:11px;cursor:pointer;font-family:monospace;border:1px solid var(--bdr2);transition:all .15s}
+.tpl-var:hover{background:var(--adim);color:var(--acc);border-color:var(--acc)}
+.tst:hover{background:var(--surf3)}
+.team-row{display:grid;grid-template-columns:1fr 90px 120px 120px 28px;gap:6px;align-items:center;padding:8px 10px;background:var(--surf2);border-radius:var(--r);border:1px solid var(--bdr)}
+.team-inp{width:100%;padding:5px 8px;background:var(--surf3);border:1px solid var(--bdr2);border-radius:5px;color:var(--txt);font-size:12px;outline:none}
+.team-inp:focus{border-color:var(--acc)}
+.team-inp::placeholder{color:var(--txt3)}
+.team-sel{width:100%;padding:5px 22px 5px 8px;background:var(--surf3);border:1px solid var(--bdr2);border-radius:5px;color:var(--txt);font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1 3l4 4 4-4' stroke='%23999' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;background-color:var(--surf3)}
+.team-sel:focus{border-color:var(--acc)}
+.team-sel option{background:var(--surf2)}
+.team-del{width:28px;height:28px;border-radius:var(--r);border:1px solid var(--bdr2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt3);transition:all .15s;flex-shrink:0}
+.team-del:hover{background:var(--redd);color:var(--red);border-color:transparent}
+.team-del svg{width:12px;height:12px}
+.team-header{display:grid;grid-template-columns:1fr 90px 120px 120px 28px;gap:6px;padding:0 10px 5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3)}
 .toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:9999;pointer-events:none}
 .toast{padding:10px 14px;border-radius:var(--rl);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;animation:ti .2s ease;max-width:320px;border:1px solid transparent;pointer-events:all;box-shadow:var(--sha)}
 .toast.ok{background:var(--surf);border-color:var(--grnd);color:var(--grn)}
@@ -453,6 +470,34 @@ tr:hover td{background:var(--surf2)}
       </div>
       <div class="fhint" style="margin-top:7px">Tasks matched by name across Brand Management and Owned Brands workspaces.</div>
     </div>
+
+    <div class="ss">
+      <h3>&#128226; Notification Templates</h3>
+      <div class="fhint" style="margin-bottom:12px">Customize the message sent for each notification. Use <code style="background:var(--surf3);padding:1px 5px;border-radius:4px;font-size:11px">{variable}</code> placeholders — they get replaced automatically.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="tpl-tab on" onclick="swTpl('slackFeedback',this)">Slack: Feedback</button>
+        <button class="tpl-tab" onclick="swTpl('slackNewSub',this)">Slack: New Submission</button>
+        <button class="tpl-tab" onclick="swTpl('clickupFeedback',this)">ClickUp: Feedback</button>
+        <button class="tpl-tab" onclick="swTpl('clickupReady',this)">ClickUp: Ready</button>
+      </div>
+      <div id="tpl-editor">
+        <textarea class="ft2" id="tpl-txt" style="min-height:130px;font-family:monospace;font-size:12.5px" oninput="onTplChange()"></textarea>
+        <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="tpl-vars"></div>
+          <button class="tst" onclick="resetTpl()">Reset to default</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ss">
+      <h3>&#128101; Team Directory</h3>
+      <div class="fhint" style="margin-bottom:12px">Map team members to their Slack and ClickUp IDs. Designers are auto-tagged in notifications based on the name entered in submissions.</div>
+      <div id="team-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+      <button class="btn btng" style="font-size:12px;width:100%;justify-content:center;gap:6px" onclick="addTeamRow()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Add Team Member
+      </button>
+    </div>
   </div>
   <div class="mof"><button class="btn btng" onclick="closeO('o-st')">Cancel</button><button class="btn btnp" onclick="saveSt()">Save Settings</button></div>
 </div></div>
@@ -484,7 +529,12 @@ tr:hover td{background:var(--surf2)}
 // KEYS
 const KS='mop_s8',KC='mop_c6',KT='mop_t5';
 // STATE
-let subs=[],clients={bm:[],ob:[]},settings={adminPw:'admin',slackWebhook:'',slackChannel:'#content-feedback',clickupToken:'',clientPasswords:{},clientManagers:{}};
+let subs=[],clients={bm:[],ob:[]},settings={adminPw:'admin',slackWebhook:'',slackChannel:'#content-feedback',clickupToken:'',clientPasswords:{},clientManagers:{},team:[],templates:{
+  slackFeedback:'📋 *Feedback received on {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Status:* {status}\n*Designer:* {designer}\n\n*Feedback:*\n{feedback}',
+  slackNewSub:'📬 *New Submission: {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Designer:* {designer}\n*Marketplace:* {marketplace}\n*Client Manager:* {clientManager}\n{link}',
+  clickupFeedback:'📋 MarketplaceOps Feedback\n\nDesigner: {designer}\n{admins}\n\n{feedback}',
+  clickupReady:'✅ Ready for Upload to Amazon\n\nAsset: {taskName}\nClient: {client}\nType: {type} V{version}\nMarketplace: {marketplace}\n{asin}\nDesigner: {designer}\n\nThis asset is ready to upload to Amazon.'
+}};
 let sess={role:'',cid:'',cname:''};
 let activeC='all',editId=null,fbId=null,ntId=null,nfId=null;
 let selCol='#4bbfb0',fbImg=null,dropId=null,bulkMode=false,isDark=true,curTab='subs';
@@ -513,7 +563,12 @@ function load(){
   try{
     const s=localStorage.getItem(KS);if(s)subs=JSON.parse(s);
     const c=localStorage.getItem(KC);clients=c?JSON.parse(c):JSON.parse(JSON.stringify(DEF));
-    const t=localStorage.getItem(KT);if(t)settings=Object.assign({adminPw:'admin',slackWebhook:'',slackChannel:'#content-feedback',clickupToken:'',clientPasswords:{},clientManagers:{}},JSON.parse(t));
+    const t=localStorage.getItem(KT);if(t)settings=Object.assign({adminPw:'admin',slackWebhook:'',slackChannel:'#content-feedback',clickupToken:'',clientPasswords:{},clientManagers:{},team:[],templates:{
+  slackFeedback:'📋 *Feedback received on {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Status:* {status}\n*Designer:* {designer}\n\n*Feedback:*\n{feedback}',
+  slackNewSub:'📬 *New Submission: {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Designer:* {designer}\n*Marketplace:* {marketplace}\n*Client Manager:* {clientManager}\n{link}',
+  clickupFeedback:'📋 MarketplaceOps Feedback\n\nDesigner: {designer}\n{admins}\n\n{feedback}',
+  clickupReady:'✅ Ready for Upload to Amazon\n\nAsset: {taskName}\nClient: {client}\nType: {type} V{version}\nMarketplace: {marketplace}\n{asin}\nDesigner: {designer}\n\nThis asset is ready to upload to Amazon.'
+}},JSON.parse(t));
     const th=localStorage.getItem('mop_th');if(th)isDark=th==='dark';
   }catch(e){clients=JSON.parse(JSON.stringify(DEF));}
   applyTheme();
@@ -956,15 +1011,21 @@ async function sendNf(){
   if(!settings.slackWebhook){toast('Add a Slack webhook in Settings first','er');return;}
   const extra=document.getElementById('nf-ext').value.trim();
   const mgr=settings.clientManagers[s.cid]||'Client Manager';
+  const admTags=settings.team?settings.team.filter(m=>m.role==='Admin'&&m.slackId).map(m=>`<@${m.slackId}>`).join(' '):'';
+  // tag client manager by name match in team directory
+  const cmgrName=settings.clientManagers[s.cid]||'';
+  const cmgrMember=settings.team&&settings.team.find(m=>m.name&&m.name.toLowerCase()===cmgrName.toLowerCase());
+  const cmgrTag=cmgrMember&&cmgrMember.slackId?`<@${cmgrMember.slackId}>`:cmgrName;
+  const nfMsgText=resolveTpl('slackNewSub',{
+    taskName:s.name,client:s.cname,type:s.type,version:s.version,
+    designer:s.designer||'TBD',marketplace:s.marketplace||'US',
+    asin:s.asin||'',clientManager:cmgrTag,
+    link:s.link?`<${s.link}|View Asset>`:''
+  });
   const blocks=[
-    {type:'header',text:{type:'plain_text',text:`New Submission: ${s.name}`}},
-    {type:'section',fields:[
-      {type:'mrkdwn',text:`*Client:*\n${s.cname}`},
-      {type:'mrkdwn',text:`*Type:*\n${s.type} V${s.version}`},
-      {type:'mrkdwn',text:`*Designer:*\n${s.designer||'TBD'}`},
-      {type:'mrkdwn',text:`*Marketplace:*\n${s.marketplace||'US'}${s.asin?' - '+s.asin:''}`},
-    ]},
+    {type:'section',text:{type:'mrkdwn',text:nfMsgText}},
   ];
+  if(admTags)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Admins:* ${admTags}`}});
   if(s.link)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Link:* <${s.link}|View Asset>`}});
   if(extra)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Note:*\n${extra}`}});
   blocks.push({type:'context',elements:[{type:'mrkdwn',text:`Notifying: ${mgr} - ${new Date().toLocaleString()}`}]});
@@ -1001,12 +1062,107 @@ function renderArch(){
 }
 
 // SETTINGS
+// TEMPLATE VARS PER KEY
+const TPL_VARS={
+  slackFeedback:['{taskName}','{client}','{type}','{version}','{status}','{designer}','{feedback}','{marketplace}','{asin}'],
+  slackNewSub:['{taskName}','{client}','{type}','{version}','{designer}','{marketplace}','{asin}','{clientManager}','{link}'],
+  clickupFeedback:['{taskName}','{client}','{type}','{version}','{designer}','{admins}','{feedback}','{marketplace}','{asin}'],
+  clickupReady:['{taskName}','{client}','{type}','{version}','{designer}','{marketplace}','{asin}']
+};
+const TPL_DEFAULTS={
+  slackFeedback:'📋 *Feedback received on {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Status:* {status}\n*Designer:* {designer}\n\n*Feedback:*\n{feedback}',
+  slackNewSub:'📬 *New Submission: {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Designer:* {designer}\n*Marketplace:* {marketplace}\n*Client Manager:* {clientManager}\n{link}',
+  clickupFeedback:'📋 MarketplaceOps Feedback\n\nDesigner: {designer}\n{admins}\n\n{feedback}',
+  clickupReady:'✅ Ready for Upload to Amazon\n\nAsset: {taskName}\nClient: {client}\nType: {type} V{version}\nMarketplace: {marketplace}\n{asin}\nDesigner: {designer}\n\nThis asset is ready to upload to Amazon.'
+};
+let curTpl='slackFeedback';
+function swTpl(key,el){
+  curTpl=key;
+  document.querySelectorAll('.tpl-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  if(!settings.templates)settings.templates={};
+  document.getElementById('tpl-txt').value=settings.templates[key]||TPL_DEFAULTS[key]||'';
+  const varsEl=document.getElementById('tpl-vars');
+  varsEl.innerHTML=(TPL_VARS[key]||[]).map(v=>`<button class="tpl-var" onclick="insertVar('${v}')" title="Click to insert">${v}</button>`).join('');
+}
+function onTplChange(){
+  if(!settings.templates)settings.templates={};
+  settings.templates[curTpl]=document.getElementById('tpl-txt').value;
+}
+function insertVar(v){
+  const ta=document.getElementById('tpl-txt');
+  const start=ta.selectionStart,end=ta.selectionEnd;
+  const val=ta.value;
+  ta.value=val.slice(0,start)+v+val.slice(end);
+  ta.selectionStart=ta.selectionEnd=start+v.length;
+  ta.focus();
+  onTplChange();
+}
+function resetTpl(){
+  if(!confirm('Reset this template to default?'))return;
+  if(!settings.templates)settings.templates={};
+  settings.templates[curTpl]=TPL_DEFAULTS[curTpl];
+  document.getElementById('tpl-txt').value=TPL_DEFAULTS[curTpl];
+}
+
+// TEMPLATE RESOLVER
+function resolveTpl(key,vars){
+  if(!settings.templates)settings.templates={};
+  let t=settings.templates[key]||TPL_DEFAULTS[key]||'';
+  Object.entries(vars).forEach(([k,v])=>{ t=t.split('{'+k+'}').join(v||''); });
+  return t;
+}
+
 function openSt(){
   document.getElementById('s-apw').value='';
   document.getElementById('s-slk').value=settings.slackWebhook||'';
   document.getElementById('s-slkch').value=settings.slackChannel||'#content-feedback';
   document.getElementById('s-cu').value=settings.clickupToken||'';
-  buildCpList();buildCeList();refreshStUI();openO('o-st');
+  buildCpList();buildCeList();buildTeamList();refreshStUI();
+  if(!settings.templates)settings.templates={};
+  curTpl='slackFeedback';
+  document.getElementById('tpl-txt').value=settings.templates['slackFeedback']||TPL_DEFAULTS['slackFeedback'];
+  document.querySelectorAll('.tpl-tab').forEach((t,i)=>t.classList.toggle('on',i===0));
+  const varsEl=document.getElementById('tpl-vars');
+  varsEl.innerHTML=(TPL_VARS['slackFeedback']||[]).map(v=>`<button class="tpl-var" onclick="insertVar('${v}')" title="Click to insert">${v}</button>`).join('');
+  openO('o-st');
+}
+function buildTeamList(){
+  const el=document.getElementById('team-list');
+  el.innerHTML=`<div class="team-header"><span>Name</span><span>Role</span><span>Slack ID</span><span>ClickUp ID</span><span></span></div>`;
+  if(!settings.team||!settings.team.length){el.innerHTML+=`<div style="text-align:center;padding:14px;font-size:13px;color:var(--txt3)">No team members yet. Click Add to get started.</div>`;return;}
+  settings.team.forEach((m,i)=>{
+    const row=document.createElement('div');row.className='team-row';
+    row.innerHTML=`
+      <input class="team-inp" type="text" placeholder="e.g. Maria Santos" value="${esc(m.name||'')}" data-i="${i}" data-f="name">
+      <select class="team-sel" data-i="${i}" data-f="role">
+        <option value="Designer"${m.role==='Designer'?' selected':''}>Designer</option>
+        <option value="Admin"${m.role==='Admin'?' selected':''}>Admin</option>
+      </select>
+      <input class="team-inp" type="text" placeholder="U012AB3CD" value="${esc(m.slackId||'')}" data-i="${i}" data-f="slackId">
+      <input class="team-inp" type="text" placeholder="ClickUp ID" value="${esc(m.clickupId||'')}" data-i="${i}" data-f="clickupId">
+      <button class="team-del" onclick="removeTeamRow(${i})"><svg viewBox="0 0 11 11" fill="none"><path d="M1 2.5h9M3.5 2.5V1.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M4.5 5v3M6.5 5v3M2 2.5l.7 6.5a1 1 0 0 0 1 .9h3.6a1 1 0 0 0 1-.9L9 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+    el.appendChild(row);
+  });
+  // live update on change
+  el.querySelectorAll('.team-inp,.team-sel').forEach(inp=>{
+    inp.addEventListener('input',e=>{
+      const i=parseInt(e.target.dataset.i);const f=e.target.dataset.f;
+      if(settings.team[i])settings.team[i][f]=e.target.value;
+    });
+  });
+}
+function addTeamRow(){
+  if(!settings.team)settings.team=[];
+  settings.team.push({name:'',role:'Designer',slackId:'',clickupId:''});
+  buildTeamList();
+  // scroll to bottom of team list
+  const el=document.getElementById('team-list');
+  el.lastElementChild&&el.lastElementChild.scrollIntoView({behavior:'smooth'});
+}
+function removeTeamRow(i){
+  settings.team.splice(i,1);
+  buildTeamList();
 }
 function buildCpList(){
   document.getElementById('cp-list').innerHTML=allC().map(c=>`<div class="cprow"><span class="sdot" style="background:${c.color}"></span><span class="cpnm">${esc(c.name)}</span><input class="cpin" type="password" placeholder="Password" value="${esc(settings.clientPasswords[c.id]||'')}" id="cp-${c.id}"></div>`).join('');
@@ -1060,6 +1216,13 @@ function saveSt(){
       const vals=inputs.map(i=>i.value.trim()).filter(Boolean);
       settings.clientManagers[c.id]=vals;
     }
+  });
+  // save team from inputs (belt and suspenders)
+  const rows=document.querySelectorAll('.team-row');
+  rows.forEach((row,i)=>{
+    if(!settings.team[i])return;
+    const inps=row.querySelectorAll('.team-inp,.team-sel');
+    inps.forEach(inp=>{if(inp.dataset.f)settings.team[i][inp.dataset.f]=inp.value;});
   });
   save();refreshStUI();updateIDots();closeO('o-st');toast('Settings saved','ok');
 }
@@ -1128,11 +1291,16 @@ function exportCSV(archOnly){
 async function trigSlack(sub){
   if(!settings.slackWebhook)return;
   const em={Approved:'✅','Needs Revision':'🔄','Pending Review':'⏳','On Hold':'⏸️'};
+  const adminTags=settings.team?settings.team.filter(m=>m.role==='Admin'&&m.slackId).map(m=>`<@${m.slackId}>`).join(' '):'';
+  const msgText=resolveTpl('slackFeedback',{
+    taskName:sub.name,client:sub.cname,type:sub.type,version:sub.version,
+    status:sub.status,designer:sub.designer||'TBD',
+    feedback:sub.feedback||'(no text)',marketplace:sub.marketplace||'US',
+    asin:sub.asin||''
+  });
   const payload={blocks:[
-    {type:'header',text:{type:'plain_text',text:`${em[sub.status]||'📋'} Feedback — ${sub.name}`}},
-    {type:'section',fields:[{type:'mrkdwn',text:`*Client:*\n${sub.cname}`},{type:'mrkdwn',text:`*Type:*\n${sub.type} V${sub.version}`},{type:'mrkdwn',text:`*Status:*\n${sub.status}`},{type:'mrkdwn',text:`*Designer:*\n${sub.designer||'TBD'}`}]},
-    {type:'section',text:{type:'mrkdwn',text:`*Feedback:*\n${sub.feedback||'(no text)'}`}},
-    {type:'context',elements:[{type:'mrkdwn',text:`${settings.slackChannel} - ${new Date().toLocaleString()}`}]}
+    {type:'section',text:{type:'mrkdwn',text:msgText}},
+    {type:'context',elements:[{type:'mrkdwn',text:`${settings.slackChannel} · ${new Date().toLocaleString()}${adminTags?' | '+adminTags:''}`}]}
   ]};
   try{
     const r=await fetch('/api/slack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhookUrl:settings.slackWebhook,payload})});
@@ -1152,6 +1320,16 @@ async function trigCU(sub){if(!settings.clickupToken||!sub.feedback)return;await
 async function trigRdyCU(sub){
   if(!settings.clickupToken)return;
   await postCU(sub,'Ready for Upload to Amazon\n\nAsset: '+sub.name+'\nClient: '+sub.cname+'\nType: '+sub.type+' V'+sub.version+'\nMarketplace: '+(sub.marketplace||'US')+(sub.asin?'\nASIN: '+sub.asin:'')+'\nDesigner: '+(sub.designer||'TBD')+'\n\nThis asset is ready to upload to Amazon.');
+}
+function buildCUComment(sub,txt){
+  const desMember=settings.team&&settings.team.find(m=>m.name&&m.name.toLowerCase()===(sub.designer||'').toLowerCase());
+  const desTag=desMember&&desMember.clickupId?`@[${desMember.clickupId}]`:(sub.designer||'TBD');
+  const admLines=settings.team?settings.team.filter(m=>m.role==='Admin'&&m.clickupId).map(m=>`CC: @[${m.clickupId}]`).join('\n'):'';
+  return resolveTpl('clickupFeedback',{
+    taskName:sub.name,client:sub.cname,type:sub.type,version:sub.version,
+    designer:desTag,admins:admLines,feedback:txt,
+    marketplace:sub.marketplace||'US',asin:sub.asin?'ASIN: '+sub.asin:''
+  });
 }
 async function postCU(sub,txt){
   try{
