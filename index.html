@@ -399,6 +399,16 @@ tr:hover td{background:var(--surf2)}
 <div class="ov" id="o-fb"><div class="mo" style="width:500px">
   <div class="moh"><h2 id="fb-ttl">Feedback</h2><button class="mx" onclick="closeO('o-fb')">&#x2715;</button></div>
   <div class="mob">
+    <div class="fr">
+      <label>Change Status <span style="font-weight:400;text-transform:none;font-size:10px;color:var(--txt3)">(optional)</span></label>
+      <select class="fs2" id="fb-status">
+        <option value="">— Keep current —</option>
+        <option value="Pending Review">Pending Review</option>
+        <option value="Approved">Approved</option>
+        <option value="Needs Revision">Needs Revision</option>
+        <option value="On Hold">On Hold</option>
+      </select>
+    </div>
     <div class="fr"><label>Feedback Notes</label><textarea class="ft2" id="fb-txt" style="min-height:100px" placeholder="Add your feedback here"></textarea></div>
     <div class="fr"><label>Feedback Date (blank = today)</label><input class="fi2" type="date" id="fb-dt"></div>
     <div class="fr"><label>Feedback Image (optional)</label>
