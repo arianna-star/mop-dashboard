@@ -969,7 +969,7 @@ async function sendNf(){
   if(extra)blocks.push({type:'section',text:{type:'mrkdwn',text:`*Note:*\n${extra}`}});
   blocks.push({type:'context',elements:[{type:'mrkdwn',text:`Notifying: ${mgr} - ${new Date().toLocaleString()}`}]});
   try{
-    await fetch(settings.slackWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks})});
+    await fetch('/api/slack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhookUrl:settings.slackWebhook,payload:{blocks}})});
     document.getElementById('nf-res').innerHTML=`<div style="color:var(--grn);font-size:13px">Notification sent to ${mgr}</div>`;
     addAudit(s.id,'notify',`Client manager (${mgr}) notified`);save();renderAudit();
     setTimeout(()=>closeO('o-nf'),1300);toast(`Notified ${mgr}`,'ok');
@@ -1128,14 +1128,16 @@ function exportCSV(archOnly){
 async function trigSlack(sub){
   if(!settings.slackWebhook)return;
   const em={Approved:'✅','Needs Revision':'🔄','Pending Review':'⏳','On Hold':'⏸️'};
+  const payload={blocks:[
+    {type:'header',text:{type:'plain_text',text:`${em[sub.status]||'📋'} Feedback — ${sub.name}`}},
+    {type:'section',fields:[{type:'mrkdwn',text:`*Client:*\n${sub.cname}`},{type:'mrkdwn',text:`*Type:*\n${sub.type} V${sub.version}`},{type:'mrkdwn',text:`*Status:*\n${sub.status}`},{type:'mrkdwn',text:`*Designer:*\n${sub.designer||'TBD'}`}]},
+    {type:'section',text:{type:'mrkdwn',text:`*Feedback:*\n${sub.feedback||'(no text)'}`}},
+    {type:'context',elements:[{type:'mrkdwn',text:`${settings.slackChannel} - ${new Date().toLocaleString()}`}]}
+  ]};
   try{
-    await fetch(settings.slackWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks:[
-      {type:'header',text:{type:'plain_text',text:`${em[sub.status]||'📋'} Feedback — ${sub.name}`}},
-      {type:'section',fields:[{type:'mrkdwn',text:`*Client:*\n${sub.cname}`},{type:'mrkdwn',text:`*Type:*\n${sub.type} V${sub.version}`},{type:'mrkdwn',text:`*Status:*\n${sub.status}`},{type:'mrkdwn',text:`*Designer:*\n${sub.designer||'TBD'}`}]},
-      {type:'section',text:{type:'mrkdwn',text:`*Feedback:*\n${sub.feedback||'(no text)'}`}},
-      {type:'context',elements:[{type:'mrkdwn',text:`${settings.slackChannel} - ${new Date().toLocaleString()}`}]}
-    ]})});
-    toast('Slack notification sent','ok');
+    const r=await fetch('/api/slack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({webhookUrl:settings.slackWebhook,payload})});
+    if(r.ok)toast('Slack notification sent','ok');
+    else toast('Slack failed — check webhook','er');
   }catch(e){toast('Slack failed — check webhook','er');}
 }
 async function testSlk(){
@@ -1153,15 +1155,15 @@ async function trigRdyCU(sub){
 }
 async function postCU(sub,txt){
   try{
-    const tr=await fetch('https://api.clickup.com/api/v2/team',{headers:{Authorization:settings.clickupToken}});
+    const tr=await fetch('/api/clickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:settings.clickupToken,path:'/team',method:'GET'})});
     const td=await tr.json();
     for(const team of(td.teams||[])){
-      const sr=await fetch('https://api.clickup.com/api/v2/team/'+team.id+'/task?query='+encodeURIComponent(sub.name)+'&include_closed=true',{headers:{Authorization:settings.clickupToken}});
+      const sr=await fetch('/api/clickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:settings.clickupToken,path:'/team/'+team.id+'/task?query='+encodeURIComponent(sub.name)+'&include_closed=true',method:'GET'})});
       const sd=await sr.json();
       const tasks=sd.tasks||[];
       const match=tasks.find(t=>t.name.toLowerCase()===sub.name.toLowerCase())||tasks[0];
       if(match){
-        const cr=await fetch('https://api.clickup.com/api/v2/task/'+match.id+'/comment',{method:'POST',headers:{Authorization:settings.clickupToken,'Content-Type':'application/json'},body:JSON.stringify({comment_text:'MarketplaceOps\n\n'+txt,notify_all:true})});
+        const cr=await fetch('/api/clickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:settings.clickupToken,path:'/task/'+match.id+'/comment',method:'POST',body:{comment_text:'MarketplaceOps\n\n'+txt,notify_all:true}})});
         if(cr.ok){toast('ClickUp comment added to "'+match.name+'"','ok');return true;}
       }
     }
@@ -1171,7 +1173,7 @@ async function postCU(sub,txt){
 async function testCU(){
   const token=document.getElementById('s-cu').value.trim();if(!token){toast('Enter an API token first','er');return;}
   try{
-    const r=await fetch('https://api.clickup.com/api/v2/team',{headers:{Authorization:token}});
+    const r=await fetch('/api/clickup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,path:'/team',method:'GET'})});
     const d=await r.json();
     if(d.teams&&d.teams.length)toast('Connected: '+d.teams.map(t=>t.name).join(', '),'ok');
     else toast('Token invalid or no workspaces','er');
