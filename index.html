@@ -572,25 +572,35 @@ const DEF={bm:[
   {id:'ob-digital',name:'OB - Digital',color:'#4bbfb0'},
 ]};
 
-// LOAD
-function load(){
+// LOAD & SAVE via API
+async function load(){
   try{
-    const s=localStorage.getItem(KS);if(s)subs=JSON.parse(s);
-    const c=localStorage.getItem(KC);clients=c?JSON.parse(c):JSON.parse(JSON.stringify(DEF));
-    const t=localStorage.getItem(KT);if(t)settings=Object.assign({adminPw:'admin',slackWebhook:'',slackChannel:'#content-feedback',clickupToken:'',clientPasswords:{},clientManagers:{},team:[],templates:{
-  slackFeedback:'📋 *Feedback received on {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Status:* {status}\n*Designer:* {designer}\n\n*Feedback:*\n{feedback}',
-  slackNewSub:'📬 *New Submission: {taskName}*\n\n*Client:* {client}\n*Type:* {type} V{version}\n*Designer:* {designer}\n*Marketplace:* {marketplace}\n*Client Manager:* {clientManager}\n{link}',
-  clickupFeedback:'📋 MarketplaceOps Feedback\n\nDesigner: {designer}\n{admins}\n\n{feedback}',
-  clickupReady:'✅ Ready for Upload to Amazon\n\nAsset: {taskName}\nClient: {client}\nType: {type} V{version}\nMarketplace: {marketplace}\n{asin}\nDesigner: {designer}\n\nThis asset is ready to upload to Amazon.'
-}},JSON.parse(t));
     const th=localStorage.getItem('mop_th');if(th)isDark=th==='dark';
-  }catch(e){clients=JSON.parse(JSON.stringify(DEF));}
-  applyTheme();
+    applyTheme();
+    // init DB tables
+    await fetch('/api/init',{method:'POST'});
+    // load all data in parallel
+    const [subsRes,clientsRes,settingsRes]=await Promise.all([
+      fetch('/api/submissions'),
+      fetch('/api/clients'),
+      fetch('/api/settings')
+    ]);
+    subs=await subsRes.json();
+    clients=await clientsRes.json();
+    settings=await settingsRes.json();
+  }catch(e){
+    console.error('Load error:',e);
+    clients=JSON.parse(JSON.stringify(DEF));
+    applyTheme();
+  }
 }
 function save(){
-  localStorage.setItem(KS,JSON.stringify(subs));
-  localStorage.setItem(KC,JSON.stringify(clients));
-  localStorage.setItem(KT,JSON.stringify(settings));
+  // save in background, don't block UI
+  Promise.all([
+    fetch('/api/submissions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(subs)}),
+    fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(clients)}),
+    fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(settings)})
+  ]).catch(e=>console.error('Save error:',e));
 }
 
 // THEME
@@ -626,9 +636,12 @@ function doLogin(){
     else document.getElementById('lerr').textContent='Incorrect password or no account found.';
   }
 }
-function enterApp(){
+async function enterApp(){
   document.getElementById('lv').style.display='none';
   document.getElementById('av').classList.add('on');
+  // show loading state
+  document.getElementById('tbody').innerHTML='<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--txt3);font-size:13px">Loading submissions...</td></tr>';
+  await load();
   setupRole();
 }
 function doLogout(){
@@ -1513,7 +1526,8 @@ document.addEventListener('keydown',function(e){
 });
 
 // BOOT
-load();
+const th=localStorage.getItem('mop_th');if(th)isDark=th==='dark';
+applyTheme();
 document.getElementById('tab-audit').style.display='none';
 document.getElementById('tab-arch').style.display='none';
 
