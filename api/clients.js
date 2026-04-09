@@ -1,6 +1,6 @@
-import pool from './db.js';
+const pool = require('./db');
 
-const DEFAULT_CLIENTS = {
+const DEF = {
   bm: [
     { id: 'real-mushrooms', name: 'Real Mushrooms', color: '#f5a93a' },
     { id: 'future-method', name: 'Future Method', color: '#f5a93a' },
@@ -23,36 +23,26 @@ const DEFAULT_CLIENTS = {
   ]
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   try {
     if (req.method === 'GET') {
-      const result = await pool.query(
-        "SELECT data FROM clients WHERE id = 'default'"
-      );
-      if (result.rows.length === 0) {
-        return res.status(200).json(DEFAULT_CLIENTS);
-      }
-      return res.status(200).json(result.rows[0].data);
+      const result = await pool.query("SELECT data FROM clients WHERE id = 'default'");
+      return res.status(200).json(result.rows.length === 0 ? DEF : result.rows[0].data);
     }
-
     if (req.method === 'POST') {
-      const clients = req.body;
       await pool.query(
-        `INSERT INTO clients (id, data, updated_at)
-         VALUES ('default', $1, NOW())
+        `INSERT INTO clients (id, data, updated_at) VALUES ('default', $1, NOW())
          ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()`,
-        [JSON.stringify(clients)]
+        [JSON.stringify(req.body)]
       );
       return res.status(200).json({ ok: true });
     }
-
     res.status(405).end();
-  } catch (e) {
+  } catch(e) {
     res.status(500).json({ error: e.message });
   }
-}
+};

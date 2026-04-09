@@ -1,9 +1,8 @@
-import pkg from 'pg';
-const { Pool } = pkg;
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.mopdb_POSTGRES_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-export default pool;
+module.exports = pool;

@@ -1,6 +1,6 @@
-import pool from './db.js';
+const pool = require('./db');
 
-const DEFAULT_SETTINGS = {
+const DEF = {
   adminPw: 'admin',
   slackWebhook: '',
   slackChannel: '#content-feedback',
@@ -16,38 +16,27 @@ const DEFAULT_SETTINGS = {
   }
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   try {
     if (req.method === 'GET') {
-      const result = await pool.query(
-        "SELECT data FROM settings WHERE id = 'default'"
-      );
-      if (result.rows.length === 0) {
-        return res.status(200).json(DEFAULT_SETTINGS);
-      }
-      const saved = result.rows[0].data;
-      // Merge with defaults to ensure new fields always exist
-      return res.status(200).json(Object.assign({}, DEFAULT_SETTINGS, saved));
+      const result = await pool.query("SELECT data FROM settings WHERE id = 'default'");
+      if (result.rows.length === 0) return res.status(200).json(DEF);
+      return res.status(200).json(Object.assign({}, DEF, result.rows[0].data));
     }
-
     if (req.method === 'POST') {
-      const settings = req.body;
       await pool.query(
-        `INSERT INTO settings (id, data, updated_at)
-         VALUES ('default', $1, NOW())
+        `INSERT INTO settings (id, data, updated_at) VALUES ('default', $1, NOW())
          ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()`,
-        [JSON.stringify(settings)]
+        [JSON.stringify(req.body)]
       );
       return res.status(200).json({ ok: true });
     }
-
     res.status(405).end();
-  } catch (e) {
+  } catch(e) {
     res.status(500).json({ error: e.message });
   }
-}
+};
