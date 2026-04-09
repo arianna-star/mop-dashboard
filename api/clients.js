@@ -1,4 +1,4 @@
-const pool = require('./db');
+const supabase = require('./db');
 
 const DEF = {
   bm: [
@@ -30,15 +30,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   try {
     if (req.method === 'GET') {
-      const result = await pool.query("SELECT data FROM clients WHERE id = 'default'");
-      return res.status(200).json(result.rows.length === 0 ? DEF : result.rows[0].data);
+      const { data, error } = await supabase.from('clients').select('data').eq('id', 'default').single();
+      if (error || !data) return res.status(200).json(DEF);
+      return res.status(200).json(data.data);
     }
     if (req.method === 'POST') {
-      await pool.query(
-        `INSERT INTO clients (id, data, updated_at) VALUES ('default', $1, NOW())
-         ON CONFLICT (id) DO UPDATE SET data = $1, updated_at = NOW()`,
-        [JSON.stringify(req.body)]
-      );
+      const { error } = await supabase.from('clients').upsert({ id: 'default', data: req.body, updated_at: new Date().toISOString() });
+      if (error) throw error;
       return res.status(200).json({ ok: true });
     }
     res.status(405).end();

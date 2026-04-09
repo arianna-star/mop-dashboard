@@ -1,8 +1,8 @@
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 
-const pool = new Pool({
-  connectionString: process.env.mopdb_POSTGRES_URL_NON_POOLING,
-  ssl: { rejectUnauthorized: false }
-});
+const supabase = createClient(
+  process.env.mopdb_SUPABASE_URL,
+  process.env.mopdb_SUPABASE_SERVICE_ROLE_KEY
+);
 
-module.exports = pool;
+module.exports = supabase;
